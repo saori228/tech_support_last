@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+// use Laravel\Sanctum\HasApiTokens; // Закомментировано, так как пакет не установлен
 
 class User extends Authenticatable
 {
+    // use HasApiTokens, HasFactory, Notifiable; // Закомментировано, так как пакет не установлен
     use HasFactory, Notifiable;
 
     /**
@@ -54,23 +55,27 @@ class User extends Authenticatable
         return $this->hasMany(Ticket::class);
     }
 
-    public function messages()
-    {
-        return $this->hasMany(Message::class);
-    }
-
     public function isAdmin()
     {
-        return $this->role->name === 'admin';
+        // Исправленный метод для проверки роли админа
+        // Проверяем как по имени "администратор", так и по имени "admin"
+        return $this->role && ($this->role->name === 'администратор' || $this->role->name === 'admin');
     }
 
     public function isSupport()
     {
-        return $this->role->name === 'сотрудник';
+        return $this->role && $this->role->name === 'сотрудник';
     }
 
     public function isUser()
     {
-        return $this->role->name === 'пользователь';
+        return $this->role && $this->role->name === 'пользователь';
+    }
+    
+    // Метод для получения всех сообщений пользователя
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'user_id')
+            ->orWhere('support_id', $this->id);
     }
 }

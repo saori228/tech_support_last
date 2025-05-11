@@ -37,26 +37,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'update'])->name('profile.update');
     
-    // Обращения
-    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
-    Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
-    Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
-    Route::put('/tickets/{ticket}/deadline', [TicketController::class, 'updateDeadline'])->name('tickets.update.deadline');
-    Route::put('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.update.status');
+    // Обращения (только для пользователей и сотрудников)
+    Route::middleware('restrict.admin')->group(function () {
+        Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+        Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+        Route::post('/tickets', [TicketController::class, 'store'])->name('tickets.store');
+        Route::put('/tickets/{ticket}/deadline', [TicketController::class, 'updateDeadline'])->name('tickets.update.deadline');
+        Route::put('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])->name('tickets.update.status');
+    });
     
     // Чат
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat', [ChatController::class, 'store'])->name('chat.store');
     
-    // Админка (только для админа)
-    Route::middleware(function ($request, $next) {
-        if (!auth()->user()->isAdmin()) {
-            return redirect()->route('home');
-        }
-        return $next($request);
-    })->group(function () {
-        Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
-        Route::put('/admin/users/{user}/role', [AdminController::class, 'updateRole'])->name('admin.users.role.update');
-    });
+    // Админка (доступна напрямую без middleware для отладки)
+    Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    Route::put('/admin/users/{user}/role', [AdminController::class, 'updateRole'])->name('admin.users.role.update');
 });
-

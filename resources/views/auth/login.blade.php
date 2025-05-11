@@ -4,7 +4,7 @@
     <div class="form-container">
         <div class="form-title">Авторизация</div>
         <div class="form-content">
-            <form action="{{ route('login') }}" method="POST">
+            <form action="{{ route('login') }}" method="POST" class="auth-form">
                 @csrf
                 <div class="form-group">
                     <input type="email" name="email" class="form-input" placeholder="Email" value="{{ old('email') }}" required>
@@ -18,4 +18,32 @@
             </form>
         </div>
     </div>
+    
+    <style>
+        .auth-form {
+            width: 100%;
+        }
+        
+        @media (max-width: 480px) {
+            .form-container {
+                width: 90%;
+            }
+            
+            .form-title {
+                font-size: 18px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            .form-input {
+                padding: 8px 15px;
+            }
+            
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
 @endsection

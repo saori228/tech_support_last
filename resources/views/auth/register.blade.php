@@ -4,7 +4,7 @@
     <div class="form-container">
         <div class="form-title">Регистрация</div>
         <div class="form-content">
-            <form action="{{ route('register') }}" method="POST">
+            <form action="{{ route('register') }}" method="POST" class="auth-form">
                 @csrf
                 <div class="form-group">
                     <input type="text" name="first_name" class="form-input" placeholder="Имя" value="{{ old('first_name') }}" required>
@@ -23,4 +23,32 @@
             </form>
         </div>
     </div>
+    
+    <style>
+        .auth-form {
+            width: 100%;
+        }
+        
+        @media (max-width: 480px) {
+            .form-container {
+                width: 90%;
+            }
+            
+            .form-title {
+                font-size: 18px;
+            }
+            
+            .form-group {
+                margin-bottom: 12px;
+            }
+            
+            .form-input {
+                padding: 8px 15px;
+            }
+            
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
 @endsection

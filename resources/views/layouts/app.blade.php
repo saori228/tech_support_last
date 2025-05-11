@@ -56,6 +56,9 @@
         .footer {
             padding: 15px 20px;
             border-top: 1px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .button {
@@ -322,6 +325,132 @@
             background-color: #fff;
             color: #000;
         }
+        
+        /* Мобильная адаптация */
+        @media (max-width: 480px) {
+            .header {
+                padding: 10px;
+                border-bottom: 2px solid #000;
+            }
+            
+            .title {
+                font-size: 18px;
+            }
+            
+            .profile-link {
+                display: none;
+            }
+            
+            .profile-icon {
+                display: block;
+                width: 30px;
+                height: 30px;
+            }
+            
+            .content {
+                padding: 15px 10px;
+                border-bottom: 2px solid #000;
+                border-top: 2px solid #000;
+            }
+            
+            .footer {
+                padding: 10px;
+                border-top: 2px solid #000;
+                justify-content: space-between;
+            }
+            
+            .home-link {
+                display: flex;
+                align-items: center;
+                text-decoration: none;
+                color: #000;
+                font-weight: bold;
+            }
+            
+            .home-hint {
+                display: flex;
+                align-items: center;
+                margin-left: 10px;
+                margin-bottom: 15px;
+                opacity: 0.5;
+            }
+            
+            .home-hint-icon {
+                width: 20px;
+                height: 20px;
+                margin-right: 5px;
+            }
+            
+            .button {
+                min-width: 150px;
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            /* Адаптация формы */
+            .form-container {
+                max-width: 100%;
+            }
+            
+            /* Адаптация чата */
+            .chat-container {
+                max-width: 100%;
+            }
+            
+            .chat-title {
+                font-size: 18px;
+            }
+            
+            .chat-messages {
+                height: 350px;
+            }
+            
+            .message {
+                max-width: 85%;
+                font-size: 14px;
+            }
+            
+            /* Адаптация истории обращений */
+            .ticket-list {
+                max-width: 100%;
+            }
+            
+            .ticket-item {
+                flex-direction: column;
+            }
+            
+            .ticket-left, .ticket-right {
+                width: 100%;
+            }
+            
+            /* Адаптация админ-панели */
+            .admin-container {
+                max-width: 100%;
+            }
+            
+            .admin-table {
+                font-size: 12px;
+            }
+            
+            .admin-table th, .admin-table td {
+                padding: 5px;
+            }
+            
+            /* Адаптация профиля */
+            .profile-container {
+                flex-direction: column;
+                max-width: 100%;
+            }
+            
+            .profile-left, .profile-right {
+                width: 100%;
+                padding-right: 0;
+            }
+            
+            .profile-right {
+                margin-top: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -332,8 +461,14 @@
         <div class="title">Техническая поддержка</div>
         @auth
             <a href="{{ route('profile') }}" class="profile-link">Личный кабинет</a>
+            <a href="{{ route('profile') }}" class="profile-icon" style="display: none;">
+                <img src="{{ asset('profile-icon.png') }}" alt="Личный кабинет" width="30" height="30">
+            </a>
         @else
             <a href="{{ route('login') }}" class="profile-link">Личный кабинет</a>
+            <a href="{{ route('login') }}" class="profile-icon" style="display: none;">
+                <img src="{{ asset('profile-icon.png') }}" alt="Личный кабинет" width="30" height="30">
+            </a>
         @endauth
     </div>
     
@@ -353,12 +488,46 @@
         @endif
         
         @yield('content')
+        
+        <!-- Подсказка для возврата на главную (видна только на мобильных) -->
+        <div class="home-hint" style="display: none;">
+            <img src="{{ asset('home-icon.png') }}" alt="Главная" class="home-hint-icon">
+            <span>возврат на главную страницу</span>
+        </div>
     </div>
     
     <div class="footer">
         <a href="{{ route('home') }}">
             <img src="{{ asset('logo.png') }}" alt="Логотип" class="logo">
         </a>
+        <a href="{{ route('home') }}" class="home-link" style="display: none;">
+            <img src="{{ asset('home-icon.png') }}" alt="На главную" width="24" height="24">
+            <span style="margin-left: 5px;">На главную</span>
+        </a>
     </div>
+    
+    <script>
+        // Проверка мобильного устройства и применение соответствующих стилей
+        document.addEventListener('DOMContentLoaded', function() {
+            const isMobile = window.innerWidth <= 480;
+            
+            if (isMobile) {
+                document.querySelector('.profile-link').style.display = 'none';
+                document.querySelector('.profile-icon').style.display = 'block';
+                document.querySelector('.home-hint').style.display = 'flex';
+                document.querySelector('.home-link').style.display = 'flex';
+            }
+            
+            // Обработка изменения размера окна
+            window.addEventListener('resize', function() {
+                const isMobileNow = window.innerWidth <= 480;
+                
+                document.querySelector('.profile-link').style.display = isMobileNow ? 'none' : 'block';
+                document.querySelector('.profile-icon').style.display = isMobileNow ? 'block' : 'none';
+                document.querySelector('.home-hint').style.display = isMobileNow ? 'flex' : 'none';
+                document.querySelector('.home-link').style.display = isMobileNow ? 'flex' : 'none';
+            });
+        });
+    </script>
 </body>
 </html>
