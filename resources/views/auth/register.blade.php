@@ -18,7 +18,7 @@
                 <div class="form-group">
                     <input type="password" name="password" class="form-input" placeholder="Пароль" required>
                 </div>
-                <button type="submit" class="button">Зарегистрироваться</button>
+                <button type="submit" class="button_rega">Зарегистрироваться</button>
                 <a href="{{ route('login') }}" class="form-link">Уже есть аккаунт</a>
             </form>
         </div>
@@ -27,6 +27,22 @@
     <style>
         .auth-form {
             width: 100%;
+        }
+        .button_rega{
+            display: inline-block;
+            background-color: #000;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin: 10px 0px 10px 110px;
+            text-align: center;
+            min-width: 200px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            font-weight: 900;
+
         }
         
         @media (max-width: 480px) {
@@ -46,8 +62,20 @@
                 padding: 8px 15px;
             }
             
-            .button {
-                width: 100%;
+            .button_rega {
+                  display: inline-block;
+            background-color: #000;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin: 10px 0px 10px 65px;
+            text-align: center;
+            min-width: 200px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            font-weight: 900;
             }
         }
     </style>

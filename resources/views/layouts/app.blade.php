@@ -4,12 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Техническая поддержка</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
+            font-weight: 900;
         }
         
         body {
@@ -34,14 +40,14 @@
         
         .title {
             font-size: 24px;
-            font-weight: bold;
+            font-weight: 900;
             color: #000;
         }
         
         .profile-link {
             color: #000;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 900;
         }
         
         .content {
@@ -74,10 +80,74 @@
             cursor: pointer;
             border: none;
             font-size: 16px;
+            font-weight: 900;
         }
         
         .button:hover {
             opacity: 0.8;
+        }
+        
+        .search-container {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #000;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 900;
+            outline: none;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #000;
+            border-top: none;
+            border-radius: 0 0 15px 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .search-result-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .search-result-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .new-message-indicator {
+            width: 12px;
+            height: 12px;
+            background-color: #ff4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
         
         .form-container {
@@ -91,7 +161,7 @@
         .form-title {
             padding: 15px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 900;
             border-bottom: 1px solid #ccc;
         }
         
@@ -110,10 +180,12 @@
             border: none;
             background-color: #000;
             color: #fff;
+            font-weight: 900;
         }
         
         .form-input::placeholder {
             color: rgba(255, 255, 255, 0.7);
+            font-weight: 900;
         }
         
         .form-link {
@@ -122,6 +194,7 @@
             margin: 10px 0;
             color: #000;
             text-decoration: none;
+            font-weight: 900;
         }
         
         .chat-container {
@@ -135,7 +208,7 @@
         .chat-title {
             padding: 15px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 900;
             border-bottom: 1px solid #ccc;
         }
         
@@ -150,6 +223,7 @@
             max-width: 80%;
             padding: 10px;
             border-radius: 10px;
+            font-weight: 900;
         }
         
         .message-user {
@@ -177,14 +251,17 @@
             padding: 10px;
             border: none;
             outline: none;
+            font-weight: 900;
         }
         
         .chat-input button {
+            border-radius: 10px;
             background-color: #000;
             color: #fff;
             border: none;
             padding: 10px 15px;
             cursor: pointer;
+            font-weight: 900;
         }
         
         .ticket-list {
@@ -211,17 +288,19 @@
         }
         
         .ticket-number {
-            font-weight: bold;
+            font-weight: 900;
             margin-bottom: 10px;
         }
         
         .ticket-deadline {
             font-size: 14px;
+            font-weight: 900;
         }
         
         .ticket-description {
             overflow-y: auto;
             max-height: 100px;
+            font-weight: 900;
         }
         
         .admin-container {
@@ -235,7 +314,7 @@
         .admin-title {
             padding: 15px;
             text-align: center;
-            font-weight: bold;
+            font-weight: 900;
             border-bottom: 1px solid #ccc;
         }
         
@@ -254,7 +333,7 @@
         }
         
         .user-name {
-            font-weight: bold;
+            font-weight: 900;
         }
         
         .user-role {
@@ -285,7 +364,7 @@
         }
         
         .profile-title {
-            font-weight: bold;
+            font-weight: 900;
             margin-bottom: 20px;
         }
         
@@ -298,11 +377,13 @@
         .error {
             color: red;
             margin-bottom: 10px;
+            font-weight: 900;
         }
         
         .success {
             color: green;
             margin-bottom: 10px;
+            font-weight: 900;
         }
         
         /* Чередование цветов в истории обращений */
@@ -364,7 +445,7 @@
                 align-items: center;
                 text-decoration: none;
                 color: #000;
-                font-weight: bold;
+                font-weight: 900;
             }
             
             .home-hint {
@@ -491,8 +572,7 @@
         
         <!-- Подсказка для возврата на главную (видна только на мобильных) -->
         <div class="home-hint" style="display: none;">
-            <img src="{{ asset('home-icon.png') }}" alt="Главная" class="home-hint-icon">
-            <span>возврат на главную страницу</span>
+            
         </div>
     </div>
     

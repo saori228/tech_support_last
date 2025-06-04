@@ -13,7 +13,7 @@
                     <input type="password" name="password" class="form-input" placeholder="Пароль" required>
                 </div>
                 <a href="{{ route('password.request') }}" class="form-link">Забыл пароль</a>
-                <button type="submit" class="button">Войти</button>
+                <button type="submit" class="button_voiti">Войти</button>
                 <a href="{{ route('register') }}" class="form-link">Создать аккаунт</a>
             </form>
         </div>
@@ -23,6 +23,22 @@
         .auth-form {
             width: 100%;
         }
+        .button_voiti{
+            display: inline-block;
+            background-color: #000;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin: 10px 0px 10px 120px;
+            text-align: center;
+            min-width: 200px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            font-weight: 900;
+        }
+        
         
         @media (max-width: 480px) {
             .form-container {
@@ -41,8 +57,20 @@
                 padding: 8px 15px;
             }
             
-            .button {
-                width: 100%;
+            .button_voiti {
+                  display: inline-block;
+            background-color: #000;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            margin: 10px 0px 10px 70px;
+            text-align: center;
+            min-width: 200px;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            font-weight: 900;
             }
         }
     </style>

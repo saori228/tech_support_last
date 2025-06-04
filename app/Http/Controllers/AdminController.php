@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
@@ -26,7 +26,26 @@ class AdminController extends Controller
         
         // Проверяем роль напрямую, чтобы обойти возможные проблемы с методом isAdmin()
         if ($user->role && ($user->role->name === 'администратор' || $user->role->name === 'admin')) {
-            $users = User::with('role')->where('id', '!=', Auth::id())->get();
+            // Поиск пользователей по email и ФИО
+            if ($request->has('search') && !empty($request->search)) {
+                $searchTerm = $request->search;
+                $users = User::where(function($query) use ($searchTerm) {
+                    $query->where('email', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('first_name', 'like', '%' . $searchTerm . '%')
+                          ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                          ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . $searchTerm . '%');
+                })
+                ->with('role')
+                ->where('id', '!=', Auth::id())
+                ->get();
+                
+                if ($request->ajax()) {
+                    return response()->json($users);
+                }
+            } else {
+                $users = User::with('role')->where('id', '!=', Auth::id())->get();
+            }
+            
             $roles = Role::all();
             
             return view('admin.index', compact('users', 'roles'));

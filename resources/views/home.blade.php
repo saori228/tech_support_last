@@ -10,7 +10,7 @@
                 
                 @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.index') }}" class="button">Админ-панель</a>
-                    <a href="{{ route('chat.index') }}" class="button">Чат с сотрудниками</a>
+                    
                 @elseif(auth()->user()->isSupport())
                     <a href="{{ route('tickets.index') }}" class="button">История обращений</a>
                     <a href="{{ route('chat.index') }}" class="button">Чат с пользователями</a>

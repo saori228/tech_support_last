@@ -50,7 +50,7 @@
         <div class="profile-right">
             @if($user->isAdmin())
                 <a href="{{ route('admin.index') }}" class="button">Админ-панель</a>
-                <a href="{{ route('chat.index') }}" class="button">Чат с сотрудниками</a>
+                
                 <a href="{{ route('home') }}" class="button">На главную</a>
             @elseif($user->isSupport())
                 <a href="{{ route('tickets.index') }}" class="button">История обращений</a>

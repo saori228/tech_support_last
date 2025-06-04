@@ -2,7 +2,19 @@
 
 @section('content')
     <div class="ticket-list">
-        <h2 class="title">История обращений</h2>
+        <h2 class="title_history">История обращений</h2>
+        
+        @if(auth()->user()->isSupport())
+            <!-- Поиск клиентов для сотрудника поддержки -->
+            <div class="search-container">
+                <input type="text" 
+                       class="search-input" 
+                       id="userSearch" 
+                       placeholder="Поиск клиентов по email и ФИО..."
+                       autocomplete="off">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+        @endif
         
         @if(auth()->user()->isSupport() && isset($selectedUser))
             <div class="user-navigation">
@@ -73,6 +85,12 @@
     </div>
     
     <style>
+        .title_history{
+            font-size: 24px;
+            font-weight: 900;
+            color: #000;
+            margin: 10px 0px 10px 270px;
+        }
         .user-navigation {
             padding: 10px;
             display: flex;
@@ -84,15 +102,20 @@
         .nav-link {
             text-decoration: none;
             color: #000;
+            font-weight: 900;
+            font-style: italic;
         }
         
         .current-user {
-            font-weight: bold;
+            font-weight: 900;
+            font-style: italic;
         }
         
         .no-tickets {
             padding: 20px;
             text-align: center;
+            font-weight: 900;
+            font-style: italic;
         }
         
         .deadline-form, .status-form {
@@ -102,11 +125,15 @@
         .date-input, .status-select {
             padding: 5px;
             margin-right: 5px;
+            font-weight: 900;
+            font-style: italic;
         }
         
         .ticket-error-text {
             margin-top: 10px;
             color: #d9534f;
+            font-weight: 900;
+            font-style: italic;
         }
         
         @media (max-width: 480px) {
@@ -151,6 +178,78 @@
                 width: 100%;
                 margin-top: 5px;
             }
+            .title_history{
+            font-size: 24px;
+            font-weight: 900;
+            color: #000;
+            margin: 10px 0px 10px 95px;
+        }
         }
     </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('userSearch');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (searchInput) {
+                let searchTimeout;
+                
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    const query = this.value.trim();
+                    
+                    if (query.length < 2) {
+                        searchResults.style.display = 'none';
+                        return;
+                    }
+                    
+                    searchTimeout = setTimeout(() => {
+                        fetch(`{{ route('tickets.index') }}?search=${encodeURIComponent(query)}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            searchResults.innerHTML = '';
+                            
+                            if (data.length === 0) {
+                                searchResults.innerHTML = '<div class="search-result-item">Пользователи не найдены</div>';
+                            } else {
+                                data.forEach(user => {
+                                    const item = document.createElement('div');
+                                    item.className = 'search-result-item';
+                                    
+                                    const userInfo = document.createElement('div');
+                                    userInfo.innerHTML = `<strong>${user.first_name} ${user.last_name}</strong><br><small>${user.email}</small>`;
+                                    
+                                    item.appendChild(userInfo);
+                                    
+                                    item.addEventListener('click', function() {
+                                        window.location.href = `{{ route('tickets.index') }}?user_id=${user.id}`;
+                                    });
+                                    
+                                    searchResults.appendChild(item);
+                                });
+                            }
+                            
+                            searchResults.style.display = 'block';
+                        })
+                        .catch(error => {
+                            console.error('Ошибка поиска:', error);
+                        });
+                    }, 300);
+                });
+                
+                // Скрываем результаты при клике вне поиска
+                document.addEventListener('click', function(e) {
+                    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                        searchResults.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
 @endsection

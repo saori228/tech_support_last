@@ -7,8 +7,8 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class ChatController extends Controller
 {
@@ -17,16 +17,68 @@ class ChatController extends Controller
         $user = Auth::user();
         
         if ($user->isSupport()) {
-            // Получаем всех пользователей (не сотрудников и не админов)
+            // Поиск пользователей для сотрудника поддержки
+            if ($request->has('search')) {
+                $userRole = Role::where('name', 'пользователь')->first();
+                $searchTerm = $request->search;
+                
+                if (empty($searchTerm)) {
+                    // Показываем всех пользователей с приоритетом для тех, кто писал недавно
+                    $searchResults = User::where('role_id', $userRole->id)
+                        ->leftJoin('messages', function($join) use ($user) {
+                            $join->on('users.id', '=', 'messages.user_id')
+                                 ->where('messages.is_from_user', true)
+                                 ->where('messages.support_id', $user->id)
+                                 ->where('messages.created_at', '>', now()->subHours(24));
+                        })
+                        ->select('users.*', DB::raw('COUNT(messages.id) as recent_messages_count'))
+                        ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.role_id', 'users.created_at', 'users.updated_at')
+                        ->orderByDesc('recent_messages_count')
+                        ->orderBy('users.first_name')
+                        ->limit(10)
+                        ->get();
+                } else {
+                    // Поиск по email и ФИО
+                    $searchResults = User::where('role_id', $userRole->id)
+                        ->where(function($query) use ($searchTerm) {
+                            $query->where('email', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('first_name', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . $searchTerm . '%');
+                        })
+                        ->get();
+                }
+                
+                // Добавляем информацию о новых сообщениях
+                foreach ($searchResults as $searchUser) {
+                    // Проверяем, открывал ли сотрудник чат с этим пользователем недавно
+                    $lastViewTime = session('last_view_' . $searchUser->id, now()->subDays(1));
+                    
+                    $searchUser->has_new_messages = Message::where('user_id', $searchUser->id)
+                        ->where('support_id', $user->id)
+                        ->where('is_from_user', true)
+                        ->where('created_at', '>', $lastViewTime)
+                        ->exists();
+                    
+                    $searchUser->unread_count = Message::where('user_id', $searchUser->id)
+                        ->where('support_id', $user->id)
+                        ->where('is_from_user', true)
+                        ->where('created_at', '>', $lastViewTime)
+                        ->count();
+                }
+                
+                return response()->json($searchResults);
+            }
+            
+            // Получаем всех пользователей
             $userRole = Role::where('name', 'пользователь')->first();
             $users = User::where('role_id', $userRole->id)->get();
             
-            // Если нет пользователей, возвращаем пустой чат
             if ($users->isEmpty()) {
                 return view('chat.index', ['users' => collect(), 'messages' => collect()]);
             }
             
-            // Получаем текущего выбранного пользователя или первого в списке
+            // Получаем выбранного пользователя
             $currentUserIndex = 0;
             if ($request->has('user_id')) {
                 $selectedUser = $users->firstWhere('id', $request->user_id);
@@ -41,36 +93,53 @@ class ChatController extends Controller
                 $selectedUser = $users->first();
             }
             
-            // Вычисляем индексы предыдущего и следующего пользователя (циклически)
             $prevUserIndex = ($currentUserIndex - 1 + $users->count()) % $users->count();
             $nextUserIndex = ($currentUserIndex + 1) % $users->count();
             
             $prevUser = $users[$prevUserIndex];
             $nextUser = $users[$nextUserIndex];
             
-            // Получаем сообщения для выбранного пользователя
-            $messages = Message::where(function($query) use ($selectedUser, $user) {
-                $query->where(function($q) use ($selectedUser, $user) {
-                    $q->where('user_id', $selectedUser->id)
-                      ->where('support_id', $user->id);
-                })->orWhere(function($q) use ($selectedUser, $user) {
-                    $q->where('user_id', $user->id)
-                      ->where('support_id', $selectedUser->id);
-                });
-            })->orderBy('created_at')->get();
+            // Получаем сообщения
+            $messages = Message::getBetweenUserAndSupport($selectedUser->id, $user->id);
+            
+            // Сохраняем время просмотра чата с этим пользователем
+            session(['last_view_' . $selectedUser->id => now()]);
             
             return view('chat.index', compact('users', 'selectedUser', 'messages', 'prevUser', 'nextUser'));
+            
         } elseif ($user->isAdmin()) {
-            // Для админа показываем его чат с сотрудником поддержки
+            // Поиск сотрудников для админа
+            if ($request->has('search')) {
+                $supportRole = Role::where('name', 'сотрудник')->first();
+                $searchTerm = $request->search;
+                
+                if (empty($searchTerm)) {
+                    $searchResults = User::where('role_id', $supportRole->id)
+                        ->orderBy('first_name')
+                        ->limit(10)
+                        ->get();
+                } else {
+                    $searchResults = User::where('role_id', $supportRole->id)
+                        ->where(function($query) use ($searchTerm) {
+                            $query->where('email', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('first_name', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . $searchTerm . '%');
+                        })
+                        ->get();
+                }
+                
+                return response()->json($searchResults);
+            }
+            
+            // Для админа показываем чат с сотрудниками
             $supportRole = Role::where('name', 'сотрудник')->first();
             $supportUsers = User::where('role_id', $supportRole->id)->get();
             
-            // Если нет сотрудников, возвращаем пустой чат
             if ($supportUsers->isEmpty()) {
                 return view('chat.index', ['messages' => collect()]);
             }
             
-            // Получаем текущего выбранного сотрудника или первого в списке
             $currentSupportIndex = 0;
             if ($request->has('support_id')) {
                 $selectedSupport = $supportUsers->firstWhere('id', $request->support_id);
@@ -85,42 +154,26 @@ class ChatController extends Controller
                 $selectedSupport = $supportUsers->first();
             }
             
-            // Вычисляем индексы предыдущего и следующего сотрудника (циклически)
             $prevSupportIndex = ($currentSupportIndex - 1 + $supportUsers->count()) % $supportUsers->count();
             $nextSupportIndex = ($currentSupportIndex + 1) % $supportUsers->count();
             
             $prevSupport = $supportUsers[$prevSupportIndex];
             $nextSupport = $supportUsers[$nextSupportIndex];
             
-            $messages = Message::where(function($query) use ($user, $selectedSupport) {
-                $query->where(function($q) use ($user, $selectedSupport) {
-                    $q->where('user_id', $user->id)
-                      ->where('support_id', $selectedSupport->id);
-                })->orWhere(function($q) use ($user, $selectedSupport) {
-                    $q->where('user_id', $selectedSupport->id)
-                      ->where('support_id', $user->id);
-                });
-            })->orderBy('created_at')->get();
+            $messages = Message::getBetweenUserAndSupport($user->id, $selectedSupport->id);
             
             return view('chat.index', compact('messages', 'supportUsers', 'selectedSupport', 'prevSupport', 'nextSupport'));
+            
         } else {
-            // Для обычного пользователя показываем его чат с сотрудником поддержки
+            // Для обычного пользователя
             $supportRole = Role::where('name', 'сотрудник')->first();
             $supportUser = User::where('role_id', $supportRole->id)->first();
             
-            $messages = Message::where(function($query) use ($user, $supportUser) {
-                if ($supportUser) {
-                    $query->where(function($q) use ($user, $supportUser) {
-                        $q->where('user_id', $user->id)
-                          ->where('support_id', $supportUser->id);
-                    })->orWhere(function($q) use ($user, $supportUser) {
-                        $q->where('user_id', $supportUser->id)
-                          ->where('support_id', $user->id);
-                    });
-                } else {
-                    $query->where('user_id', $user->id);
-                }
-            })->orderBy('created_at')->get();
+            if ($supportUser) {
+                $messages = Message::getBetweenUserAndSupport($user->id, $supportUser->id);
+            } else {
+                $messages = collect();
+            }
             
             return view('chat.index', compact('messages', 'supportUser'));
         }
@@ -146,7 +199,6 @@ class ChatController extends Controller
         }
         
         if ($user->isSupport()) {
-            // Сотрудник отправляет сообщение пользователю
             Message::create([
                 'user_id' => $request->recipient_id,
                 'support_id' => $user->id,
@@ -157,7 +209,6 @@ class ChatController extends Controller
             
             return redirect()->route('chat.index', ['user_id' => $request->recipient_id]);
         } elseif ($user->isAdmin()) {
-            // Админ отправляет сообщение сотруднику поддержки
             Message::create([
                 'user_id' => $user->id,
                 'support_id' => $request->recipient_id,
@@ -168,7 +219,6 @@ class ChatController extends Controller
             
             return redirect()->route('chat.index', ['support_id' => $request->recipient_id]);
         } else {
-            // Пользователь отправляет сообщение сотруднику поддержки
             $supportRole = Role::where('name', 'сотрудник')->first();
             $supportUser = User::where('role_id', $supportRole->id)->first();
             

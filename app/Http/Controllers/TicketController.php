@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
@@ -17,6 +18,32 @@ class TicketController extends Controller
         $user = Auth::user();
         
         if ($user->isSupport()) {
+            // Поиск пользователей для сотрудника поддержки
+            if ($request->has('search')) {
+                $userRole = Role::where('name', 'пользователь')->first();
+                $searchTerm = $request->search;
+                
+                if (empty($searchTerm)) {
+                    // Показываем всех пользователей
+                    $searchResults = User::where('role_id', $userRole->id)
+                        ->orderBy('first_name')
+                        ->limit(10)
+                        ->get();
+                } else {
+                    // Поиск по email и ФИО
+                    $searchResults = User::where('role_id', $userRole->id)
+                        ->where(function($query) use ($searchTerm) {
+                            $query->where('email', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('first_name', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . $searchTerm . '%');
+                        })
+                        ->get();
+                }
+                
+                return response()->json($searchResults);
+            }
+            
             // Получаем всех пользователей (не сотрудников и не админов)
             $userRole = Role::where('name', 'пользователь')->first();
             $users = User::where('role_id', $userRole->id)->get();
