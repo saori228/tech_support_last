@@ -23,24 +23,24 @@ class AdminController extends Controller
             'user_role' => $user->role->name ?? 'no role',
             'is_admin_method' => $user->isAdmin(),
         ]);
-        
+        // ?? позволяет выбрать одно из двух выражений в зависимости от условия
         // Проверяем роль напрямую, чтобы обойти возможные проблемы с методом isAdmin()
         if ($user->role && ($user->role->name === 'администратор' || $user->role->name === 'admin')) {
             // Поиск пользователей по email и ФИО
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
                 $users = User::where(function($query) use ($searchTerm) {
-                    $query->where('email', 'like', '%' . $searchTerm . '%')
+                    $query->where('email', 'like', '%' . $searchTerm . '%') // where добавляет условие выборки к запросу в бд
                           ->orWhere('first_name', 'like', '%' . $searchTerm . '%')
                           ->orWhere('last_name', 'like', '%' . $searchTerm . '%')
-                          ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . $searchTerm . '%');
-                })
+                          ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . $searchTerm . '%'); // CONCAT используется для объединения двух или более строковых значений в одну строку.
+                }) //orWhere - позволяет добавить условие в бд //raw - позволяет записать в бд сырое выражение (необработанное) в виде строки, то есть готовые выражения
                 ->with('role')
                 ->where('id', '!=', Auth::id())
-                ->get();
+                ->get(); // обработка запроса
                 
                 if ($request->ajax()) {
-                    return response()->json($users);
+                    return response()->json($users); // response - возврат строки из контроллера
                 }
             } else {
                 $users = User::with('role')->where('id', '!=', Auth::id())->get();
@@ -48,7 +48,7 @@ class AdminController extends Controller
             
             $roles = Role::all();
             
-            return view('admin.index', compact('users', 'roles'));
+            return view('admin.index', compact('users', 'roles')); 
         }
         
         return redirect()->route('home')->with('error', 'У вас нет прав для доступа к этой странице');
@@ -70,7 +70,7 @@ class AdminController extends Controller
         $oldRoleId = $user->role_id;
         $newRoleId = $request->role_id;
         
-        // Начинаем транзакцию для обеспечения целостности данных
+        // Начинаем транзакцию для обеспечения целостности данных // данный метод используется для того, чтобы запрос в бд шёл как единая целая последовательность
         DB::beginTransaction();
         
         try {
@@ -108,4 +108,4 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Произошла ошибка при обновлении роли: ' . $e->getMessage());
         }
     }
-}
+} // catch - позволяет обрабатывать ошибки возникающие во время выполнения программы //rollback - отменяет все текущие изменения транзакции внесённые в бд
